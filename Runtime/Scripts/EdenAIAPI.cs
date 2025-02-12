@@ -1,11 +1,8 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Net.Http;
-using System.Text;
+using System; using System.Collections.Generic;
+using System.IO; using System.Net.Http;
+using System.Threading.Tasks; using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
-using System.IO;
 
 namespace EdenAI
 {
@@ -60,7 +57,7 @@ namespace EdenAI
 
             HttpContent content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             request.Content = content;
-
+            Log($"CONTENT\n{jsonPayload}");
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseText = await response.Content.ReadAsStringAsync();
 
@@ -69,6 +66,7 @@ namespace EdenAI
                 Debug.LogError(responseText);
                 throw new Exception(responseText);
             }
+            Log($"RESPONSE\n{responseText}");
             return responseText;
         }
 
@@ -113,5 +111,11 @@ namespace EdenAI
             string responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
             return JsonConvert.DeserializeObject<YodaResponse>(responseText);
         }
-    }
+
+        void Log(string arg){
+            //UnityEngine.Debug.Log(arg);
+        }
+
+    } // end-class
+
 }
