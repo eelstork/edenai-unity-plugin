@@ -95,7 +95,13 @@ namespace EdenAI
         {
             string url = "https://api.edenai.run/v2/text/chat";
             var settings = model != null ? new Dictionary<string, string> { { provider, model } } : null;
-            var payload = new ChatRequest(provider, text, chatBotGlobalAction, previousHistory, settings);
+            var payload = new ChatRequest(
+                provider: provider,
+                text: text,
+                chatBotGlobalAction: chatBotGlobalAction,
+                previousHistory: previousHistory,
+                settings: settings
+            );
 
             string responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
             ChatResponse[] obj = JsonConvert.DeserializeObject<ChatResponse[]>(responseText);
