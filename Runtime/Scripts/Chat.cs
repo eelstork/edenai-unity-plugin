@@ -30,14 +30,17 @@ namespace EdenAI
         public string providers { get; set; }
         public bool response_as_dict = false;
         public bool show_original_response = false;
+        public int max_tokens { get; set; }
         public string text { get; set; }
         public List<ChatMessage> previous_history { get; set; }
         public string ChatBotGlobalAction { get; set; }
         public Dictionary<string, string> settings { get; set; }
 
         public ChatRequest(string provider, string text, string chatBotGlobalAction = null,
-            List<ChatMessage> previousHistory = null, Dictionary<string,string> settings = null)
+            List<ChatMessage> previousHistory = null, Dictionary<string,string> settings = null,
+            int max_tokens = 1000)
         {
+            this.max_tokens = max_tokens;
             this.providers = provider;
             this.text = text;
             this.previous_history = previousHistory;
