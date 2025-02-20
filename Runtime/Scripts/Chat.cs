@@ -10,6 +10,7 @@ namespace EdenAI
     {
         public string status { get; set; }
         public string provider { get; set; }
+        public string model { get; set; }
         public string generated_text { get; set; }
         public List<ChatMessage> message { get; set; }
         public double cost { get; set; }

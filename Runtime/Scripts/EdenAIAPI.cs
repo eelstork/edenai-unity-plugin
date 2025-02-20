@@ -12,7 +12,7 @@ namespace EdenAI
         public string api_key { get; set; }
     }
 
-    public class EdenAIApi
+    public partial class EdenAIApi
     {
         private string _apiKey;
         private static readonly HttpClient _httpClient = new HttpClient();
@@ -70,63 +70,9 @@ namespace EdenAI
             return responseText;
         }
 
-        public async Task<TextToSpeechResponse> SendTextToSpeechRequest(string provider, string text, string audioFormat,
-            TextToSpeechOption option, string language, int? rate = null, int? pitch = null, int? volume = null, string voiceModel = null)
+        void Log(string arg)
         {
-            string url = "https://api.edenai.run/v2/audio/text_to_speech";
-            var settings = voiceModel != null ? new Dictionary<string, string> { { provider, voiceModel } } : null;
-            var payload = new TextToSpeechRequest(provider, text, audioFormat, option, language, rate, pitch, volume, settings);
-
-            string responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-            TextToSpeechResponseJson[] response = JsonConvert.DeserializeObject<TextToSpeechResponseJson[]>(responseText);
-
-            return new TextToSpeechResponse
-            {
-                status = response[0].status,
-                provider = response[0].provider,
-                cost = response[0].cost,
-                voice_type = response[0].voice_type,
-                audio_base64 = response[0].audio
-            };
-        }
-
-        public async Task<ChatResponse> SendChatRequest(string provider, string text, string chatBotGlobalAction = null,
-            List<ChatMessage> previousHistory = null, string model = null, int max_tokens = 1000)
-        {
-            string url = "https://api.edenai.run/v2/text/chat";
-            var settings = new Dictionary<string, string>();
-            if(model != null) settings[provider] = model;
-            else settings = null;
-            //settings["max_tokens"] = 5000.ToString();
-            //var settings = model != null ? new Dictionary<string, string> { { provider, model } } : null;
-            var payload = new ChatRequest(
-                provider: provider,
-                text: text,
-                chatBotGlobalAction: chatBotGlobalAction,
-                previousHistory: previousHistory,
-                max_tokens: max_tokens,
-                settings: settings
-            );
-
-            string responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-            ChatResponse[] obj = JsonConvert.DeserializeObject<ChatResponse[]>(responseText);
-            return obj[0];
-        }
-
-        public async Task<YodaResponse> SendYodaRequest(string projectID, string query, List<Dictionary<string, string>> history = null,
-            int? k = null, string llmModel = null, string llmProvider = null)
-        {
-            string url = $"https://api.edenai.run/v2/aiproducts/askyoda/{projectID}/ask_llm";
-            var payload = new YodaRequest(query, history, k, llmModel, llmProvider);
-
-            string responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-            return JsonConvert.DeserializeObject<YodaResponse>(responseText);
-        }
-
-        void Log(string arg){
             UnityEngine.Debug.Log(arg);
         }
-
-    } // end-class
-
+    }
 }
