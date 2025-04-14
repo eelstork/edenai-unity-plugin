@@ -14,11 +14,13 @@ namespace EdenAI
 
     public partial class EdenAIApi
     {
+        static bool log_queries = true;
         private string _apiKey;
         private static readonly HttpClient _httpClient = new HttpClient();
 
         public EdenAIApi(string apiKey = default)
         {
+            _httpClient.Timeout = TimeSpan.FromSeconds(200);
             if (!string.IsNullOrEmpty(apiKey))
             {
                 this._apiKey = apiKey;
@@ -51,6 +53,10 @@ namespace EdenAI
 
         private async Task<string> SendHttpRequestAsync(string url, HttpMethod method, object payload)
         {
+            Savings.CheckCost();
+            if(Stopper.should_stop){
+                throw new Savings("Stopped");
+            }
             string jsonPayload = JsonConvert.SerializeObject(payload, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             HttpRequestMessage request = new HttpRequestMessage(method, url);
             AddHeaders(request);
@@ -64,6 +70,13 @@ namespace EdenAI
             if (!response.IsSuccessStatusCode)
             {
                 Debug.LogError(responseText);
+                //return responseText;
+                if(responseText.Contains(
+                    "Null characters are not allowed")
+                ){
+                    Debug.Log("NULL CHARACTERS ERROR...");
+                    return "NULL CHARACTERS NOT ALLOWED IN REQUEST";
+                }
                 throw new Exception(responseText);
             }
             Log($"RESPONSE\n{responseText}");
@@ -72,6 +85,7 @@ namespace EdenAI
 
         void Log(string arg)
         {
+            if(!log_queries) return;
             UnityEngine.Debug.Log(arg);
         }
     }
