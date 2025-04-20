@@ -21,10 +21,36 @@ namespace EdenAI
     {
         [JsonProperty(PropertyName = "role")]
         public string Role { get; set; }
-        [JsonProperty(PropertyName = "message")]
+
+        // For backward compatibility, we'll keep Message but make it optional
+        [JsonProperty(PropertyName = "message", NullValueHandling = NullValueHandling.Ignore)]
         public string Message { get; set; }
+
+        // New content property that can handle multiple content types
+        [JsonProperty(PropertyName = "content", NullValueHandling = NullValueHandling.Ignore)]
+        public List<MessageContent> Content { get; set; }
     }
 
+    [Serializable]
+    public class MessageContent
+    {
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }  // "text" or "image_url"
+
+        [JsonProperty(PropertyName = "text", NullValueHandling = NullValueHandling.Ignore)]
+        public string Text { get; set; }
+
+        [JsonProperty(PropertyName = "image_url", NullValueHandling = NullValueHandling.Ignore)]
+        public ImageUrl ImageUrl { get; set; }
+    }
+
+    [Serializable]
+    public class ImageUrl
+    {
+        [JsonProperty(PropertyName = "url")]
+        public string Url { get; set; }
+    }
+    
     [Serializable]
     public class ChatRequest
     {
@@ -49,4 +75,4 @@ namespace EdenAI
             this.settings = settings;
         }
     }
-}
+    }
