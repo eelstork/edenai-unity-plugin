@@ -86,7 +86,7 @@ namespace EdenAI
         void Log(string arg)
         {
             if(!log_queries) return;
-            UnityEngine.Debug.Log(arg);
+            UnityEngine.Debug.LogWarning(arg);
         }
     }
 }

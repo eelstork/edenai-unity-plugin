@@ -10,47 +10,43 @@ using Ex = System.Exception;
 
 namespace EdenAI
 {
-    public partial class EdenAIApi
-    {
-
-        const int MaxLength = 128000;
-
-        public async Task<ChatResponse> SendChatRequest(
-    string provider,
-    string text,
-    string chatBotGlobalAction = null,
-    List<ChatMessage> previousHistory = null,
-    string model = null,
-    int max_tokens = 1000)
+public partial class EdenAIApi
 {
-    // Existing duplicate check
-    if (previousHistory?.Count > 0)
-    {
-        var n = previousHistory.Count;
-        if (previousHistory[n-1].Message == text)
-        {
+
+    const int MaxLength = 128000;
+
+    public async Task<ChatResponse> SendChatRequest(
+        string provider,
+        string text,
+        string chatBotGlobalAction = null,
+        List<ChatMessage> previousHistory = null,
+        string model = null,
+        int max_tokens = 1000
+    ){
+        // Existing duplicate check
+        while (previousHistory?.Count > 0 && previousHistory[^1].Message == text){
+            Debug.Log("Remove 1 duplicate message");
+            var n = previousHistory.Count;
             previousHistory.RemoveAt(n - 1);
         }
-    }
+        if(previousHistory?.Count > 0){
+            Debug.Log($"INCOMING {text}");
+            Debug.Log($"LAST IN  {previousHistory[^1].Message} ");
+        }
+        var len = text.Length;
+        if (len > MaxLength)
+        {
+            Debug.LogWarning($"{len} exceeds max chars in chat request (max: {MaxLength})... {text}");
+            text = text.Substring(0, MaxLength);
+        }
 
-    var len = text.Length;
-    if (len > MaxLength)
-    {
-        Debug.LogWarning($"{len} exceeds max chars in chat request (max: {MaxLength})... {text}");
-        text = text.Substring(0, MaxLength);
-    }
+        // Create the message (using Message for backward compatibility)
+        var message = new ChatMessage{ Role = "user", Message = text };
 
-    // Create the message (using Message for backward compatibility)
-    var message = new ChatMessage
-    {
-        Role = "user",
-        Message = text
-    };
-
-    // Add to history if provided
-    var updatedHistory = previousHistory != null ?
-        new List<ChatMessage>(previousHistory) { message } :
-        new List<ChatMessage> { message };
+        // Add to history if provided
+        //var updatedHistory = previousHistory != null ?
+        //new List<ChatMessage>(previousHistory) { message } :
+        //new List<ChatMessage> { message };
 
     string url = "https://api.edenai.run/v2/text/chat";
     var settings = new Dictionary<string, string>();
@@ -61,7 +57,7 @@ namespace EdenAI
         provider: provider,
         text: text,
         chatBotGlobalAction: chatBotGlobalAction,
-        previousHistory: updatedHistory,
+        previousHistory: previousHistory,
         max_tokens: max_tokens,
         settings: settings
     );
@@ -112,6 +108,7 @@ private async Task<ChatResponse> SendMultiModalChatRequest(
     string model = null,
     int max_tokens = 1000)
 {
+    Debug.Log("Sending multimodal chat request");
     // Handle duplicate message check
     if (previousHistory?.Count > 0)
     {
@@ -151,15 +148,15 @@ private async Task<ChatResponse> SendMultiModalChatRequest(
     };
 
     // Add to history if provided
-    var updatedHistory = previousHistory != null ?
-        new List<ChatMessage>(previousHistory) { message } :
-        new List<ChatMessage> { message };
+    // var updatedHistory = previousHistory != null ?
+    //     new List<ChatMessage>(previousHistory) { message } :
+    //     new List<ChatMessage> { message };
 
     var payload = new ChatRequest(
         provider: provider,
         text: null, // Will be ignored when content is present
         chatBotGlobalAction: chatBotGlobalAction,
-        previousHistory: updatedHistory,
+        previousHistory: previousHistory,
         max_tokens: max_tokens,
         settings: settings
     );
