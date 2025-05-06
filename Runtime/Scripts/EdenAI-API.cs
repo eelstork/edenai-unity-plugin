@@ -7,19 +7,22 @@ using UnityEngine;
 namespace EdenAI
 {
     [Serializable]
-    public class Key
-    {
+    public class Key{
         public string api_key { get; set; }
     }
 
     public partial class EdenAIApi
     {
-        static bool log_queries = true;
+        //static bool log_queries = true;
         private string _apiKey;
         private static readonly HttpClient _httpClient = new HttpClient();
 
-        public EdenAIApi(string apiKey = default)
-        {
+        Action<string> log, logw, log_err;
+
+        public EdenAIApi(
+            Action<string> log, Action<string> logw, Action<string> log_err, string apiKey = default
+        ){
+            this.log = log; this.logw = logw; this.log_err = log_err;
             _httpClient.Timeout = TimeSpan.FromSeconds(200);
             if (!string.IsNullOrEmpty(apiKey))
             {
@@ -51,8 +54,9 @@ namespace EdenAI
             request.Headers.Add("Authorization", "Bearer " + this._apiKey);
         }
 
-        private async Task<string> SendHttpRequestAsync(string url, HttpMethod method, object payload)
-        {
+        private async Task<string> SendHttpRequestAsync(
+            string url, HttpMethod method, object payload
+        ){
             Savings.CheckCost();
             if(Stopper.should_stop){
                 throw new Savings("Stopped");
@@ -63,30 +67,16 @@ namespace EdenAI
 
             HttpContent content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
             request.Content = content;
-            Log($"CONTENT\n{jsonPayload}");
+            log($"CONTENT\n{jsonPayload}");
             HttpResponseMessage response = await _httpClient.SendAsync(request);
             string responseText = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
-            {
+            if (!response.IsSuccessStatusCode){
                 Debug.LogError(responseText);
-                //return responseText;
-                if(responseText.Contains(
-                    "Null characters are not allowed")
-                ){
-                    Debug.Log("NULL CHARACTERS ERROR...");
-                    return "NULL CHARACTERS NOT ALLOWED IN REQUEST";
-                }
-                throw new Exception(responseText);
+                response.EnsureSuccessStatusCode();
             }
-            Log($"RESPONSE\n{responseText}");
+            log($"RESPONSE\n{responseText}");
             return responseText;
         }
 
-        void Log(string arg)
-        {
-            if(!log_queries) return;
-            UnityEngine.Debug.LogWarning(arg);
-        }
     }
 }
