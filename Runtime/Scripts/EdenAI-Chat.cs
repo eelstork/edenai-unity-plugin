@@ -2,6 +2,7 @@ using System.Collections;
 using System;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using Dic = System.Collections.Generic.Dictionary<System.String, System.String>;
 
 namespace EdenAI
 {
@@ -23,8 +24,8 @@ namespace EdenAI
         public string Role { get; set; }
 
         // For backward compatibility, we'll keep Message but make it optional
-        [JsonProperty(PropertyName = "message", NullValueHandling = NullValueHandling.Ignore)]
-        public string Message { get; set; }
+        //[JsonProperty(PropertyName = "message", NullValueHandling = NullValueHandling.Ignore)]
+        //public string Message { get; set; }
 
         // New content property that can handle multiple content types
         [JsonProperty(PropertyName = "content", NullValueHandling = NullValueHandling.Ignore)]
@@ -34,62 +35,64 @@ namespace EdenAI
     [Serializable]
     public class MessageContent
     {
-        [JsonProperty(PropertyName = "type")]
-        public string Type { get; set; }  // "text" or "image_url"
+        public string type { get; set; }  // "text" or "image_url"
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string text { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, string> content { get; set; }
 
-        [JsonProperty(PropertyName = "text", NullValueHandling = NullValueHandling.Ignore)]
-        public string Text { get; set; }
-
-        [JsonProperty(PropertyName = "image_url", NullValueHandling = NullValueHandling.Ignore)]
-        public ImageUrl ImageUrl { get; set; }
-
-        [JsonProperty(PropertyName = "media_type", NullValueHandling = NullValueHandling.Ignore)]
-        public ImageUrl MediaType { get; set; }
-
-        [JsonProperty("media_base64", NullValueHandling = NullValueHandling.Ignore)]
-        public string MediaBase64 { get; set; }
-
-        [JsonProperty(PropertyName = "content", NullValueHandling = NullValueHandling.Ignore)]
-        public MediaBase64 MediaBase64Content { get; set; }
-
-        // -------------------------------------------------------
-
-        public static MessageContent FromText(string arg)
-        => new MessageContent{ Type = "text", Text = arg };
-
-        public static MessageContent FromImageUrl(string arg)
-        => new MessageContent{
-            Type = "image_url",
-            ImageUrl = new ImageUrl { Url = arg }
-        };
-
-        public static MessageContent FromImagePath(string arg){
-            var base64Image = ImageUtils.EncodeImageToBase64(arg);
+        public static MessageContent FromText(string text){
             return new MessageContent{
-                Type = "media_base64",
-                MediaBase64Content = new MediaBase64{
-                    Base64 = base64Image, MediaType = "image/png"
+                type = "text",
+                text = "the quick brown fox"
+                //text = text
+                //content = new Dic{{"text", text}}
+            };
+        }
+
+        // public static MessageContent FromText(string text){
+        //     return new MessageContent{
+        //         type = "text",
+        //         content = new Dic{{"text", "The quick brown fox"}}
+        //         //content = new Dic{{"text", text}}
+        //     };
+        // }
+
+        public static MessageContent FromImageUrl(string imageUrl){
+            return new MessageContent{
+                type = "media_url",
+                content = new Dic{{"media_url", imageUrl}}
+            };
+        }
+
+        public static MessageContent FromImagePath(string imagePath){
+            var base64Image = ImageUtils.EncodeImageToBase64(imagePath);
+            return new MessageContent{
+                type = "media_base64",
+                content = new Dic{
+                    {"media_base64", base64Image},
+                    {"media_type", "image/png"},
                 }
             };
         }
 
     }
 
-    public class MediaBase64
-    {
-        [JsonProperty("media_base64")]
-        public string Base64 { get; set; }
+    // public class MediaBase64
+    // {
+    //     [JsonProperty("media_base64")]
+    //     public string Base64 { get; set; }
+    //
+    //     [JsonProperty("media_type")]
+    //     public string MediaType { get; set; } // "image/png", "image/jpeg"
+    // }
 
-        [JsonProperty("media_type")]
-        public string MediaType { get; set; } // "image/png", "image/jpeg"
-    }
-
-    [Serializable]
-    public class ImageUrl
-    {
-        [JsonProperty(PropertyName = "url")]
-        public string Url { get; set; }
-    }
+    // [Serializable]
+    // public class ImageUrl
+    // {
+    //     [JsonProperty(PropertyName = "url")]
+    //     public string Url { get; set; }
+    // }
 
     [Serializable]
     public class ChatRequest

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using ArgEx = System.ArgumentException;
 using Ex = System.Exception;
+using Dic = System.Collections.Generic.Dictionary<System.String, System.String>;
 
 namespace EdenAI{
 public partial class EdenAIApi{
@@ -22,34 +23,34 @@ public partial class EdenAIApi{
         List<ChatMessage> previousHistory = null,
         string model = null, int max_tokens = 1000
     ){
+        UnityEngine.Debug.Log($"History size {previousHistory.Count}");
         var messageContent = new List<MessageContent>();
         if (!string.IsNullOrWhiteSpace(text)){
             messageContent.Add(new MessageContent{
-                Type = "text", Text = text
+                type = "text",
+                content = new Dic{{"text", text}}
             });
         }
         if (!string.IsNullOrWhiteSpace(imageUrl)){
             messageContent.Add(new MessageContent{
-                Type = "image_url",
-                ImageUrl = new ImageUrl { Url = imageUrl }
+                type = "media_url",
+                content = new Dic{{"media_url", imageUrl}}
             });
         }
-
         if (!string.IsNullOrWhiteSpace(imagePath)){
             var base64Image = ImageUtils.EncodeImageToBase64(imagePath);
             messageContent.Add(new MessageContent{
-                Type = "media_base64",
-                MediaBase64Content = new MediaBase64
-                {
-                    Base64 = base64Image,
-                    MediaType = "image/png" // Optional: detect dynamically
+                type = "media_base64",
+                content = new Dic{
+                    {"media_base64", base64Image},
+                    {"media_type", "image/png"},
                 }
             });
         }
-
-        if (messageContent.Count == 0){
+        if (messageContent.Count == 0 && previousHistory.Count == 0){
             throw new ArgEx("At least one of text, imageUrl, or imagePath must be provided.");
         }
+        if(messageContent.Count == 0) messageContent = null;
         return await SendMultiModalChatRequest(
             provider, messageContent, chatBotGlobalAction,
             previousHistory, model, max_tokens
@@ -71,15 +72,20 @@ public partial class EdenAIApi{
         if (model != null) provider = provider + "/" + model;
         else settings = null;
         // Create the message with content instead of text
-        var message = new ChatMessage
-        {
-            Role = "user",
-            Content = content,
-            Message = "Image"
-        };
-        var messages = previousHistory != null
-            ? new List<ChatMessage>(previousHistory) { message }
-            : new List<ChatMessage> { message };
+        List<ChatMessage> messages = previousHistory;
+        if(content != null){
+            throw new ArgEx("Not supported right now");
+            // var message = new ChatMessage
+            // {
+            //     Role = "user",
+            //     Content = content,
+            //     Message = "Image"
+            // };
+            // messages = previousHistory != null
+            //     ? new List<ChatMessage>(previousHistory) { message }
+            //     : new List<ChatMessage> { message };
+        }
+        if(messages.Count < 1) throw new System.Exception("NO MESSAGES");
         var payload = new ChatRequest(
             provider: provider,
             messages: messages, // The new content for the chat
@@ -88,11 +94,13 @@ public partial class EdenAIApi{
             settings: settings,
             maxTokens: max_tokens
         );
-
+        string prettyPayload = JsonConvert.SerializeObject(payload, Formatting.Indented);
+        UnityEngine.Debug.Log(prettyPayload); // Or use a logger
         var responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
         if (responseText.Contains("violation")){
             throw new ArgEx(responseText);
         }
+        UnityEngine.Debug.Log(responseText);
         var obj = JsonConvert
             .DeserializeObject<ChatResponse[]>(responseText);
         return obj[0];
