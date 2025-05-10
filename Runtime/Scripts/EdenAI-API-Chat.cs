@@ -67,7 +67,7 @@ public partial class EdenAIApi{
         int max_tokens = 1000
     ){
         log("Sending multimodal chat request");
-        var url = "https://api.edenai.run/v2/text/chat";
+        var url = "https://api.edenai.run/v2/multimodal/chat";
         var settings = new Dictionary<string, string>();
         if (model != null) provider = provider + "/" + model;
         else settings = null;
@@ -97,13 +97,18 @@ public partial class EdenAIApi{
         string prettyPayload = JsonConvert.SerializeObject(payload, Formatting.Indented);
         UnityEngine.Debug.Log(prettyPayload); // Or use a logger
         var responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-        if (responseText.Contains("violation")){
-            throw new ArgEx(responseText);
-        }
         UnityEngine.Debug.Log(responseText);
-        var obj = JsonConvert
-            .DeserializeObject<ChatResponse[]>(responseText);
-        return obj[0];
+        try{
+            var obj = JsonConvert
+                .DeserializeObject<ChatResponse[]>(responseText);
+            return obj[0];
+        }catch(Exception e){
+            if (responseText.Contains("violation")){
+                throw new ArgEx(responseText);
+            }else{
+                throw;
+            }
+        }
     }
 
 } // end-class

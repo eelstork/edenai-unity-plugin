@@ -36,32 +36,35 @@ namespace EdenAI
     public class MessageContent
     {
         public string type { get; set; }  // "text" or "image_url"
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public string text { get; set; }
+        //[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        //public string text { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, string> content { get; set; }
-
-        public static MessageContent FromText(string text){
-            return new MessageContent{
-                type = "text",
-                text = "the quick brown fox"
-                //text = text
-                //content = new Dic{{"text", text}}
-            };
-        }
 
         // public static MessageContent FromText(string text){
         //     return new MessageContent{
         //         type = "text",
-        //         content = new Dic{{"text", "The quick brown fox"}}
+        //         text = "the quick brown fox"
+        //         //text = text
         //         //content = new Dic{{"text", text}}
         //     };
         // }
 
+        public static MessageContent FromText(string text){
+            return new MessageContent{
+                type = "text",
+                //content = new Dic{{"text", "The quick brown fox"}}
+                content = new Dic{{"text", text}}
+            };
+        }
+
         public static MessageContent FromImageUrl(string imageUrl){
             return new MessageContent{
                 type = "media_url",
-                content = new Dic{{"media_url", imageUrl}}
+                content = new Dic{
+                    {"media_url", imageUrl},
+                    {"media_type", "image/jpeg"}
+                }
             };
         }
 
@@ -101,7 +104,7 @@ namespace EdenAI
         public string Providers { get; set; }
 
         [JsonProperty("response_as_dict")]
-        public bool ResponseAsDict = true;
+        public bool ResponseAsDict = false;
 
         [JsonProperty("show_original_response")]
         public bool ShowOriginalResponse = false;
