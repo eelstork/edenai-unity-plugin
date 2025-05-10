@@ -42,6 +42,46 @@ namespace EdenAI
 
         [JsonProperty(PropertyName = "image_url", NullValueHandling = NullValueHandling.Ignore)]
         public ImageUrl ImageUrl { get; set; }
+
+        [JsonProperty(PropertyName = "media_type", NullValueHandling = NullValueHandling.Ignore)]
+        public ImageUrl MediaType { get; set; }
+
+        [JsonProperty("media_base64", NullValueHandling = NullValueHandling.Ignore)]
+        public string MediaBase64 { get; set; }
+
+        [JsonProperty(PropertyName = "content", NullValueHandling = NullValueHandling.Ignore)]
+        public MediaBase64 MediaBase64Content { get; set; }
+
+        // -------------------------------------------------------
+
+        public static MessageContent FromText(string arg)
+        => new MessageContent{ Type = "text", Text = arg };
+
+        public static MessageContent FromImageUrl(string arg)
+        => new MessageContent{
+            Type = "image_url",
+            ImageUrl = new ImageUrl { Url = arg }
+        };
+
+        public static MessageContent FromImagePath(string arg){
+            var base64Image = ImageUtils.EncodeImageToBase64(arg);
+            return new MessageContent{
+                Type = "media_base64",
+                MediaBase64Content = new MediaBase64{
+                    Base64 = base64Image, MediaType = "image/png"
+                }
+            };
+        }
+
+    }
+
+    public class MediaBase64
+    {
+        [JsonProperty("media_base64")]
+        public string Base64 { get; set; }
+
+        [JsonProperty("media_type")]
+        public string MediaType { get; set; } // "image/png", "image/jpeg"
     }
 
     [Serializable]
@@ -50,29 +90,50 @@ namespace EdenAI
         [JsonProperty(PropertyName = "url")]
         public string Url { get; set; }
     }
-    
+
     [Serializable]
     public class ChatRequest
     {
-        public string providers { get; set; }
-        public bool response_as_dict = false;
-        public bool show_original_response = false;
-        public int max_tokens { get; set; }
-        public string text { get; set; }
-        public List<ChatMessage> previous_history { get; set; }
-        public string ChatBotGlobalAction { get; set; }
-        public Dictionary<string, string> settings { get; set; }
+        [JsonProperty("providers")]
+        public string Providers { get; set; }
 
-        public ChatRequest(string provider, string text, string chatBotGlobalAction = null,
-            List<ChatMessage> previousHistory = null, Dictionary<string,string> settings = null,
-            int max_tokens = 1000)
-        {
-            this.max_tokens = max_tokens;
-            this.providers = provider;
-            this.text = text;
-            this.previous_history = previousHistory;
-            this.ChatBotGlobalAction = chatBotGlobalAction;
-            this.settings = settings;
+        [JsonProperty("response_as_dict")]
+        public bool ResponseAsDict = true;
+
+        [JsonProperty("show_original_response")]
+        public bool ShowOriginalResponse = false;
+
+        [JsonProperty("max_tokens")]
+        public int MaxTokens { get; set; }
+
+        [JsonProperty("messages")]
+        public List<ChatMessage> Messages { get; set; }
+
+        // Add previousHistory as an optional field
+        //[JsonProperty("previous_history", NullValueHandling = NullValueHandling.Ignore)]
+        //public List<ChatMessage> PreviousHistory { get; set; }
+
+        [JsonProperty("chatbot_global_action", NullValueHandling = NullValueHandling.Ignore)]
+        public string ChatbotGlobalAction { get; set; }
+
+        [JsonProperty("settings", NullValueHandling = NullValueHandling.Ignore)]
+        public Dictionary<string, string> Settings { get; set; }
+
+        public ChatRequest(
+            string provider,
+            List<ChatMessage> messages,
+            //List<ChatMessage> previousHistory = null,
+            string chatbotGlobalAction = null,
+            Dictionary<string, string> settings = null,
+            int maxTokens = 1000
+        ){
+            Providers = provider;
+            Messages = messages;
+            //PreviousHistory = previousHistory; // Assign the previous history
+            ChatbotGlobalAction = chatbotGlobalAction;
+            Settings = settings;
+            MaxTokens = maxTokens;
         }
     }
-    }
+
+}
