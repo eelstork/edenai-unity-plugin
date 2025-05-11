@@ -23,7 +23,6 @@ public partial class EdenAIApi{
         List<ChatMessage> previousHistory = null,
         string model = null, int max_tokens = 1000
     ){
-        UnityEngine.Debug.Log($"History size {previousHistory.Count}");
         var messageContent = new List<MessageContent>();
         if (!string.IsNullOrWhiteSpace(text)){
             messageContent.Add(new MessageContent{
@@ -85,30 +84,43 @@ public partial class EdenAIApi{
             //     ? new List<ChatMessage>(previousHistory) { message }
             //     : new List<ChatMessage> { message };
         }
-        if(messages.Count < 1) throw new System.Exception("NO MESSAGES");
+        if(messages.Count < 1) throw new ArgEx("NO MESSAGES");
         var payload = new ChatRequest(
             provider: provider,
-            messages: messages, // The new content for the chat
-            //previousHistory: updatedHistory, // Your previous conversation context
+            messages: messages,
             chatbotGlobalAction: chatBotGlobalAction,
             settings: settings,
             maxTokens: max_tokens
         );
-        string prettyPayload = JsonConvert.SerializeObject(payload, Formatting.Indented);
-        UnityEngine.Debug.Log(prettyPayload); // Or use a logger
         var responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-        UnityEngine.Debug.Log(responseText);
+        if (HintsViolation(responseText)){
+            LogInfo(payload, responseText);
+            throw new ArgEx(responseText);
+        }
         try{
             var obj = JsonConvert
                 .DeserializeObject<ChatResponse[]>(responseText);
             return obj[0];
         }catch(Exception e){
-            if (responseText.Contains("violation")){
+            UnityEngine.Debug.LogError($"Error deserializing: {e}");
+            LogInfo(payload, responseText);
+            if (HintsViolation(responseText)){
                 throw new ArgEx(responseText);
             }else{
                 throw;
             }
         }
+        // ----------------------------
+        void LogInfo(ChatRequest payload, string resp){
+            string prettyPayload = JsonConvert.SerializeObject(payload, Formatting.Indented);
+            UnityEngine.Debug.LogWarning(resp);
+            UnityEngine.Debug.Log(prettyPayload);
+        }
+    }
+
+    public bool HintsViolation(string resp){
+        return resp.Contains("ProviderException")
+            && resp.Contains("violation");
     }
 
 } // end-class
