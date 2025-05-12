@@ -9,12 +9,17 @@ namespace EdenAI
     [Serializable]
     public class ChatResponse
     {
+
         public string status { get; set; }
         public string provider { get; set; }
         public string model { get; set; }
         public string generated_text { get; set; }
         public List<ChatMessage> message { get; set; }
         public double cost { get; set; }
+
+        override public string ToString()
+        => JsonConvert.SerializeObject(this, Formatting.Indented);
+
     }
 
     [Serializable]
@@ -22,14 +27,12 @@ namespace EdenAI
     {
         [JsonProperty(PropertyName = "role")]
         public string Role { get; set; }
-
-        // For backward compatibility, we'll keep Message but make it optional
-        //[JsonProperty(PropertyName = "message", NullValueHandling = NullValueHandling.Ignore)]
-        //public string Message { get; set; }
-
-        // New content property that can handle multiple content types
         [JsonProperty(PropertyName = "content", NullValueHandling = NullValueHandling.Ignore)]
         public List<MessageContent> Content { get; set; }
+
+        override public string ToString()
+        => JsonConvert.SerializeObject(this, Formatting.Indented);
+        
     }
 
     [Serializable]
