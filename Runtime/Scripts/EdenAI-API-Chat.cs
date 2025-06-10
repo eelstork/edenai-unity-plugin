@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Text;
+using System; using System.Collections.Generic;
+using System.Net.Http; using System.Threading.Tasks;
+using System.Text; using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
 using ArgEx = System.ArgumentException;
@@ -67,6 +65,12 @@ public partial class EdenAIApi{
     ){
         log("Sending multimodal chat request");
         var url = "https://api.edenai.run/v2/multimodal/chat";
+        if(model != null){
+            if(model.Contains("claude") || model.Contains("deepseek")){
+                Debug.LogWarning("Using 'llm' endpoint");
+                url = "https://api.edenai.run/v2/llm/chat";
+            }
+        }
         var settings = new Dictionary<string, string>();
         if (model != null) provider = provider + "/" + model;
         else settings = null;
@@ -87,25 +91,40 @@ public partial class EdenAIApi{
         if(messages.Count < 1) throw new ArgEx("NO MESSAGES");
         var payload = new ChatRequest(
             provider: provider,
+            model: provider,
             messages: messages,
             chatbotGlobalAction: chatBotGlobalAction,
             settings: settings,
             maxTokens: max_tokens
         );
-        var responseText = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-        if (HintsViolation(responseText)){
-            LogInfo(payload, responseText);
-            throw new ArgEx(responseText);
-        }
+        var resp = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
+        // NOTE disable temp because it prevents editing the API
+        //if(resp.Contains("Invalid model") && ){
+        //    throw new ArgEx(ExtractMessage(resp));
+        //}
+        // if (HintsViolation(resp)){
+        //     LogInfo(payload, resp);
+        //     throw new ArgEx(resp);
+        // }
         try{
-            var obj = JsonConvert
-                .DeserializeObject<ChatResponse[]>(responseText);
-            return obj[0];
+            if(!resp.Contains("generated_text")){
+                var x = JsonConvert
+                    .DeserializeObject<EdenAI_LLM.ChatResponseLLM>(resp);
+                return new ChatResponse(){
+                    model = x.Model,
+                    generated_text = x.Choices[0].Message.Content,
+                    cost = x.Cost
+                };
+            }else{
+                var obj = JsonConvert
+                    .DeserializeObject<ChatResponse[]>(resp);
+                return obj[0];
+            }
         }catch(Exception e){
             UnityEngine.Debug.LogError($"Error deserializing: {e}");
-            LogInfo(payload, responseText);
-            if (HintsViolation(responseText)){
-                throw new ArgEx(responseText);
+            LogInfo(payload, resp);
+            if (HintsViolation(resp)){
+                throw new ArgEx(resp);
             }else{
                 throw;
             }
@@ -116,6 +135,12 @@ public partial class EdenAIApi{
             UnityEngine.Debug.LogWarning(resp);
             UnityEngine.Debug.Log(prettyPayload);
         }
+    }
+
+    string ExtractMessage(string response){
+        var match = Regex.Match(response, @"""message""\s*:\s*""([^""]+)""");
+        return (match.Success) ? match.Groups[1].Value
+                               : response;
     }
 
     public bool HintsViolation(string resp){

@@ -6,6 +6,7 @@ using Dic = System.Collections.Generic.Dictionary<System.String, System.String>;
 
 namespace EdenAI
 {
+
     [Serializable]
     public class ChatResponse
     {
@@ -32,15 +33,16 @@ namespace EdenAI
 
         override public string ToString()
         => JsonConvert.SerializeObject(this, Formatting.Indented);
-        
+
     }
 
     [Serializable]
     public class MessageContent
     {
         public string type { get; set; }  // "text" or "image_url"
-        //[JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        //public string text { get; set; }
+        // NOTE - for LLM endpoint
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public string text { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Dictionary<string, string> content { get; set; }
 
@@ -53,6 +55,13 @@ namespace EdenAI
         //     };
         // }
 
+        public static MessageContent OldStyle(string text){
+            return new MessageContent{
+                type = "text",
+                text = text
+            };
+        }
+
         public static MessageContent FromText(string text){
             return new MessageContent{
                 type = "text",
@@ -61,6 +70,7 @@ namespace EdenAI
             };
         }
 
+        // TODO - if the url does not exist... service may get stuck
         public static MessageContent FromImageUrl(string imageUrl){
             return new MessageContent{
                 type = "media_url",
@@ -72,6 +82,12 @@ namespace EdenAI
         }
 
         public static MessageContent FromImagePath(string imagePath){
+            // NOTE - afaik this happens on reload...
+            // Normally the upstream client message should catch this
+            if(!System.IO.File.Exists(imagePath)){
+                UnityEngine.Debug.LogWarning($"[EdenAI-Chat] trying to encode {imagePath}, however the image was not found");
+                return FromText(imagePath + " (file no longer exists)");
+            }
             var base64Image = ImageUtils.EncodeImageToBase64(imagePath);
             return new MessageContent{
                 type = "media_base64",
@@ -106,6 +122,9 @@ namespace EdenAI
         [JsonProperty("providers")]
         public string Providers { get; set; }
 
+        [JsonProperty("model")]
+        public string Model { get; set; }
+
         [JsonProperty("response_as_dict")]
         public bool ResponseAsDict = false;
 
@@ -133,10 +152,12 @@ namespace EdenAI
             List<ChatMessage> messages,
             //List<ChatMessage> previousHistory = null,
             string chatbotGlobalAction = null,
+            string model = null,
             Dictionary<string, string> settings = null,
             int maxTokens = 1000
         ){
             Providers = provider;
+            Model = model;
             Messages = messages;
             //PreviousHistory = previousHistory; // Assign the previous history
             ChatbotGlobalAction = chatbotGlobalAction;
