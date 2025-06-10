@@ -10,8 +10,6 @@ using Dic = System.Collections.Generic.Dictionary<System.String, System.String>;
 namespace EdenAI{
 public partial class EdenAIApi{
 
-    const int MaxLength = 128000;
-
     public async Task<ChatResponse> SendChatRequest(
         string provider,
         string text = null,
@@ -54,7 +52,7 @@ public partial class EdenAIApi{
         );
     }
 
-    // Multimodal chat -----------------------------------------
+    // Multimodal chat ----------------------------------
 
     private async Task<ChatResponse> SendMultiModalChatRequest(
         string provider, List<MessageContent> content,
@@ -98,14 +96,16 @@ public partial class EdenAIApi{
             maxTokens: max_tokens
         );
         var resp = await SendHttpRequestAsync(url, HttpMethod.Post, payload);
-        // NOTE disable temp because it prevents editing the API
-        //if(resp.Contains("Invalid model") && ){
-        //    throw new ArgEx(ExtractMessage(resp));
-        //}
-        // if (HintsViolation(resp)){
-        //     LogInfo(payload, resp);
-        //     throw new ArgEx(resp);
-        // }
+        // TODO when trying to automate edits to
+        // the Eden AI integration, this will cause
+        // false positives
+        if(resp.Contains("Invalid model")){
+           throw new ArgEx(ExtractMessage(resp));
+        }
+        if (HintsViolation(resp)){
+            LogInfo(payload, resp);
+            throw new ArgEx(resp);
+        }
         try{
             if(!resp.Contains("generated_text")){
                 var x = JsonConvert

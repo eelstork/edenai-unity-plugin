@@ -13,7 +13,7 @@ namespace EdenAI{
     }
 
     public partial class EdenAIApi{
-        //static bool log_queries = true;
+
         private string _apiKey;
         private static readonly HttpClient _httpClient = new HttpClient();
 
@@ -27,23 +27,9 @@ namespace EdenAI{
             if (!string.IsNullOrEmpty(apiKey)){
                 this._apiKey = apiKey;
             }else{
-                // Try to load from Unity Editor Preferences
-                this._apiKey = EditorPrefs.GetString("EdenAI_API_Key", "");
-
-                if (string.IsNullOrEmpty(this._apiKey))
-                {
-                    var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    var authPath = $"{userPath}/.edenai/auth.json";
-                    if (File.Exists(authPath))
-                    {
-                        var json = File.ReadAllText(authPath);
-                        Key auth = JsonConvert.DeserializeObject<Key>(json);
-                        this._apiKey = auth.api_key;
-                    }
-                    else
-                    {
-                        throw new Exception("API Key is null and auth.json does not exist. Please set the API Key in the Unity Editor Preferences (EdenAI_API_Key) or create an auth.json file.");
-                    }
+                this._apiKey = EdenAICreds.FindCreds();
+                if (string.IsNullOrEmpty(this._apiKey)){
+                    throw new Exception("API Key is null; not found in auth.json or editor prefs. Set the API Key in the Unity Editor Preferences (EdenAI_API_Key) or create an auth.json file.");
                 }
             }
         }
