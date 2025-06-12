@@ -100,22 +100,6 @@ namespace EdenAI
 
     }
 
-    // public class MediaBase64
-    // {
-    //     [JsonProperty("media_base64")]
-    //     public string Base64 { get; set; }
-    //
-    //     [JsonProperty("media_type")]
-    //     public string MediaType { get; set; } // "image/png", "image/jpeg"
-    // }
-
-    // [Serializable]
-    // public class ImageUrl
-    // {
-    //     [JsonProperty(PropertyName = "url")]
-    //     public string Url { get; set; }
-    // }
-
     [Serializable]
     public class ChatRequest
     {

@@ -14,8 +14,8 @@ namespace EdenAI{
 
     public partial class EdenAIApi{
 
-        private string _apiKey;
-        private static readonly HttpClient _httpClient = new HttpClient();
+        string _apiKey;
+        static readonly HttpClient _httpClient = new HttpClient();
 
         Action<string> log, logw, log_err;
 
@@ -25,23 +25,25 @@ namespace EdenAI{
             this.log = log; this.logw = logw; this.log_err = log_err;
             _httpClient.Timeout = TimeSpan.FromSeconds(200);
             if (!string.IsNullOrEmpty(apiKey)){
+                //nityEngine.Debug.Log($"USING CUSTOM CREDS {apiKey}");
                 this._apiKey = apiKey;
             }else{
                 this._apiKey = EdenAICreds.FindCreds();
+                //nityEngine.Debug.Log($"USING BASE CREDS {this._apiKey}");
                 if (string.IsNullOrEmpty(this._apiKey)){
                     throw new Exception("API Key is null; not found in auth.json or editor prefs. Set the API Key in the Unity Editor Preferences (EdenAI_API_Key) or create an auth.json file.");
                 }
             }
         }
 
-        private void AddHeaders(HttpRequestMessage request){
+        void AddHeaders(HttpRequestMessage request){
             if (string.IsNullOrEmpty(this._apiKey)){
                 throw new Exception("Missing API Key");
             }
             request.Headers.Add("Authorization", "Bearer " + this._apiKey);
         }
 
-        private async Task<string> SendHttpRequestAsync(
+        async Task<string> SendHttpRequestAsync(
             string url, HttpMethod method, object payload
         ){
             Savings.CheckCost();
