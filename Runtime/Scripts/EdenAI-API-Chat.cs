@@ -65,7 +65,7 @@ public partial class EdenAIApi{
         var url = "https://api.edenai.run/v2/multimodal/chat";
         if(model != null){
             if(model.Contains("claude") || model.Contains("deepseek")){
-                Debug.LogWarning("Using 'llm' endpoint");
+                //ebug.LogWarning("Using 'llm' endpoint");
                 url = "https://api.edenai.run/v2/llm/chat";
             }
         }

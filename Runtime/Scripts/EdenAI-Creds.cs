@@ -4,11 +4,10 @@ using Newtonsoft.Json; using EdenAI;
 public static class EdenAICreds{
 
     const string EditorPrefsKey = "EdenAI_API_Key";
+    static string _key;
 
     public static string FindCreds(){
-
-        var key = EditorPrefs.GetString(EditorPrefsKey, null);
-        if(key != null) return key;
+        if(_key != null) return _key;
         var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var authPath = $"{userPath}/.edenai/auth.json";
         if (File.Exists(authPath)){
@@ -18,6 +17,10 @@ public static class EdenAICreds{
         }else{
             return null;
         }
+    }
+
+    public static void CacheValues(){
+        _key = EditorPrefs.GetString(EditorPrefsKey, null);
     }
 
 }
