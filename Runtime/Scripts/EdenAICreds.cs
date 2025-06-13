@@ -1,7 +1,8 @@
 using System; using System.IO; using UnityEditor;
 using Newtonsoft.Json; using EdenAI;
 
-public static class EdenAICreds{
+
+public static class EdenAIBaseCreds{
 
     const string EditorPrefsKey = "EdenAI_API_Key";
     static string _key;

@@ -17,8 +17,9 @@ public partial class EdenAIApi{
         string imagePath = null,
         string chatBotGlobalAction = null,
         List<ChatMessage> previousHistory = null,
-        string model = null, int max_tokens = 1000
+        string model = null, int max_tokens = 1000, int timeout=720
     ){
+        _httpClient.Timeout = TimeSpan.FromSeconds(timeout);
         var messageContent = new List<MessageContent>();
         if (!string.IsNullOrWhiteSpace(text)){
             messageContent.Add(new MessageContent{

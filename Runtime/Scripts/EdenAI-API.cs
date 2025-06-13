@@ -28,7 +28,7 @@ namespace EdenAI{
                 //nityEngine.Debug.Log($"USING CUSTOM CREDS {apiKey}");
                 this._apiKey = apiKey;
             }else{
-                this._apiKey = EdenAICreds.FindCreds();
+                this._apiKey = EdenAIBaseCreds.FindCreds();
                 //nityEngine.Debug.Log($"USING BASE CREDS {this._apiKey}");
                 if (string.IsNullOrEmpty(this._apiKey)){
                     throw new Exception("API Key is null; not found in auth.json or editor prefs. Set the API Key in the Unity Editor Preferences (EdenAI_API_Key) or create an auth.json file.");
